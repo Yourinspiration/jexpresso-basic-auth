@@ -4,10 +4,11 @@
 
 	<groupId>de.yourinspiration</groupId>
 	<artifactId>jexpresso-basic-auth</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>jexpresso-basic-auth</name>
+	<description>A JExpresso middleware for HTTP Basic Authentication.</description>
 	<url>https://github.com/Yourinspiration/jexpresso-basic-auth</url>
 
 	<properties>
@@ -15,15 +16,9 @@
 	</properties>
 	
 	<distributionManagement>
-		<repository>
-			<id>yourinspiration</id>
-			<name>Internal Releases</name>
-			<url>http://nexus.yourinspiration.de/nexus/content/repositories/releases/</url>
-		</repository>
 		<snapshotRepository>
-			<id>yourinspiration</id>
-			<name>Internal Snapshots</name>
-			<url>http://nexus.yourinspiration.de/nexus/content/repositories/snapshots/</url>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -57,12 +52,22 @@
 
 	<licenses>
 		<license>
-			<name>Apache License, Version 2.0</name>
+			<name>The Apache Software License, Version 2.0</name>
 			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
 		</license>
 	</licenses>
+
+	<developers>
+		<developer>
+			<name>Marcel Härle</name>
+			<email>haerle@marcel-haerle.de</email>
+			<organization>Yourinspiration</organization>
+			<organizationUrl>http://yourinspiration.de</organizationUrl>
+		</developer>
+		<developer>
+			<name>Michael Malcharek</name>
+		</developer>
+	</developers>
 
 	<organization>
 		<name>Yourinspiration</name>
@@ -77,39 +82,85 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>de.yourinspiration</groupId>
 			<artifactId>jexpresso</artifactId>
-			<version>0.0.1-RELEASE</version>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mindrot</groupId>
-			<artifactId>jbcrypt</artifactId>
-			<version>0.3m</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
-			<version>2.12.2</version>
+			<groupId>de.yourinspiration</groupId>
+			<artifactId>jexpresso-base-auth</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.9.1</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.2</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<build>
-		<resources>
-			<resource>
-				<filtering>false</filtering>
-				<directory>src/main/resources</directory>
-			</resource>
-			<resource>
-				<filtering>false</filtering>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**</include>
-				</includes>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -120,13 +171,6 @@
 					<target>1.8</target>
 					<optimize>true</optimize>
 					<debug>true</debug>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9.1</version>
-				<configuration>
 				</configuration>
 			</plugin>
 		</plugins>

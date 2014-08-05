@@ -13,22 +13,52 @@ import de.yourinspiration.jexpresso.MiddlewareHandler;
 import de.yourinspiration.jexpresso.Next;
 import de.yourinspiration.jexpresso.Request;
 import de.yourinspiration.jexpresso.Response;
-import de.yourinspiration.jexpresso.basisauth.impl.SecurityRoute;
+import de.yourinspiration.jexpresso.baseauth.GrantedAuthority;
+import de.yourinspiration.jexpresso.baseauth.PasswordEncoder;
+import de.yourinspiration.jexpresso.baseauth.UserDetails;
+import de.yourinspiration.jexpresso.baseauth.UserDetailsService;
+import de.yourinspiration.jexpresso.baseauth.UserNotFoundException;
 import de.yourinspiration.jexpresso.http.HttpStatus;
 
+/**
+ * A middleware for JExpresso providing HTTP Basic Authentication.
+ * 
+ * @author Marcel Härle
+ *
+ */
 public class BasicAuthentation implements MiddlewareHandler {
+
+    public static final String USER_DETAILS_ATTR = "userDetails";
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     private final List<SecurityRoute> securityRoutes = new ArrayList<>();
 
+    /**
+     * Constructs a new HTTP Basic Authentiation middleware.
+     * 
+     * @param userDetailsService
+     *            the user details service to retrieve user credentials
+     * @param passwordEncoder
+     *            the password encoder to check the passwords
+     */
     public BasicAuthentation(final UserDetailsService userDetailsService, final PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void securePath(String path, String authorities, HttpMethod... methods) {
+    /**
+     * Provide HTTP Basic Authentication for the given path and methods.
+     * 
+     * @param path
+     *            the path to be secured
+     * @param authorities
+     *            the granted authorities
+     * @param methods
+     *            the methods to be secured
+     */
+    public void securePath(final String path, final String authorities, final HttpMethod... methods) {
         securityRoutes.add(new SecurityRoute(path, authorities, methods));
     }
 
@@ -41,18 +71,8 @@ public class BasicAuthentation implements MiddlewareHandler {
         }
     }
 
-    /**
-     * Check if there is a security entry for the path and method.
-     * 
-     * @param request
-     *            the current request
-     * @param response
-     *            the current response
-     * @return returns <code>true</code> if the path was public or the user was
-     *         successfully authenticated, otherwise <code>false</code>
-     */
     private boolean checkSecurityProviders(final Request request, final Response response) {
-        final String path = request.path();
+        final String path = getUri(request);
         final HttpMethod method = request.method();
 
         for (SecurityRoute route : securityRoutes) {
@@ -68,6 +88,14 @@ public class BasicAuthentation implements MiddlewareHandler {
         }
 
         return true;
+    }
+
+    private String getUri(final Request request) {
+        if (request.path().contains("?")) {
+            return request.path().substring(0, request.path().indexOf("?"));
+        } else {
+            return request.path();
+        }
     }
 
     private void handleUnauthenticated(final Response response) {
@@ -99,7 +127,7 @@ public class BasicAuthentation implements MiddlewareHandler {
                     final String authorities = getAuthoritiesForRoute(request.path(), request.method());
 
                     if (hasGrantedAuthoriy(userDetails, authorities)) {
-                        request.attribute("userDetails", userDetails);
+                        request.attribute(USER_DETAILS_ATTR, userDetails);
                         authenticated = true;
                     }
                 }
@@ -121,18 +149,19 @@ public class BasicAuthentation implements MiddlewareHandler {
     }
 
     private boolean hasGrantedAuthoriy(final UserDetails userDetails, final String authorities) {
-        boolean authorityFound = false;
+        if ("".equals(authorities.trim())) {
+            return true;
+        }
 
         for (GrantedAuthority grantedAuthority : userDetails.getAuthorities()) {
             for (String authority : authorities.split(",")) {
                 if (grantedAuthority.getAuthority().equalsIgnoreCase(authority)) {
-                    authorityFound = true;
-                    break;
+                    return true;
                 }
             }
         }
 
-        return authorityFound;
+        return false;
     }
 
 }

@@ -1,4 +1,4 @@
-package de.yourinspiration.jexpresso.basisauth.impl;
+package de.yourinspiration.jexpresso.basicauth;
 
 import io.netty.handler.codec.http.HttpMethod;
 
@@ -27,7 +27,7 @@ public class SecurityRoute {
      * @param methods
      *            the HTTP methods to secure
      */
-    public SecurityRoute(final String path, final String authorities, final HttpMethod[] methods) {
+    protected SecurityRoute(final String path, final String authorities, final HttpMethod[] methods) {
         this.path = path;
         this.authorities = authorities;
 
